@@ -15,5 +15,5 @@ idée map :
 - map spécial en intérieur avec des souris
 
 # Bus en heure de pointe
-Conduire un bus, prendre les passagers le plus vite possible sinon tu seras en retard
+Conduire un bus, prendre les passa gers le plus vite possible sinon tu seras en retard
 idée : faire les passager à l'intérieur du bus qui bougent quand t'accélère et freine MDR
