@@ -4,6 +4,9 @@ import mapTexture from './assets/map.png'
 
 import * as THREE from 'three';
 import { OrbitControls } from "three/addons";
+import Tower from "~/game/Tower.js";
+import {Clock, Vector3} from "three";
+import Ennemy from "~/game/Ennemy.js";
 
 let isLoading = ref(true)
 
@@ -80,6 +83,9 @@ onMounted(() => {
       case 'd':
         inputs.right = true
         break;
+      case 't':
+        createTowerDefenseGame()
+        break;
     }
   })
 
@@ -101,6 +107,29 @@ onMounted(() => {
     }
   })
 
+  const towers = []
+  const ennemies = []
+  const spawnPoint = new Vector3(-25, 1, -25)
+  const arrivePoint = new Vector3(0, 1, 0)
+
+  const createTowerDefenseGame = () => {
+    for (let i = 0; i < 4; i++) {
+      const tower = new Tower({
+        position: new Vector3(-(i + 5), 1, -(i + 5))
+      })
+      tower.addToScene(scene)
+      towers.push(tower)
+    }
+    for (let i = 0; i < 4; i++) {
+      const ennemy = new Ennemy({
+        position: spawnPoint
+      })
+      ennemy.addToScene(scene)
+      ennemies.push(ennemy)
+    }
+  }
+
+  const clock = new Clock()
   function animate() {
     requestAnimationFrame( animate );
 
@@ -114,6 +143,18 @@ onMounted(() => {
 
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
+
+    for (const tower of towers) {
+      for (const ennemy of ennemies) {
+        if (tower.ennemyInRange(ennemy)) {
+          ennemy.mesh.material.color = 0xEEEEEE
+        }
+      }
+    }
+
+    for (const ennemy of ennemies) {
+      ennemy.moveTo(arrivePoint, clock.getDelta())
+    }
 
     renderer.render( scene, camera );
   }
