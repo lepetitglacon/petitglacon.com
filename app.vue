@@ -4,6 +4,8 @@ import mapTexture from './assets/map.png'
 
 import * as THREE from 'three';
 import { OrbitControls } from "three/addons";
+import Canoe from "~/game/Canoe.js";
+import {Vector3} from "three";
 
 let isLoading = ref(true)
 
@@ -56,6 +58,21 @@ onMounted(() => {
     isLoading.value = false
   }
 
+  let playerCanoe = null
+  const canoes = []
+  function createCanoe() {
+	  for (let i = 0; i < 4; i++) {
+		  const canoe = new Canoe(new Vector3(i + 5, 1, 1))
+		  if (i === 0) {
+			  canoe.isBot = false
+			  playerCanoe = canoe
+		  }
+		  canoes.push(canoe)
+		  canoe.addToScene(scene)
+	  }
+  }
+  createCanoe()
+
   const velocity = 0.05
   const inputs = {
     forward: false,
@@ -80,6 +97,9 @@ onMounted(() => {
       case 'd':
         inputs.right = true
         break;
+		case ' ':
+			playerCanoe.push()
+		break;
     }
   })
 
@@ -107,6 +127,14 @@ onMounted(() => {
     // controls.object.position.copy(cube.position)
     controls.update()
 
+	  if (playerCanoe.mesh.position) {
+	    controls.target.copy(playerCanoe.mesh.position)
+	    controls.object.position.copy(playerCanoe.mesh.position)
+	    controls.object.position.x += 5
+	    controls.object.position.y += 5
+
+	  }
+
     if (inputs.forward) cube.position.z -= velocity
     if (inputs.back) cube.position.z += velocity
     if (inputs.left) cube.position.x -= velocity
@@ -114,6 +142,10 @@ onMounted(() => {
 
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
+
+	  for (const canoe of canoes) {
+		  canoe.update()
+	  }
 
     renderer.render( scene, camera );
   }
