@@ -42,7 +42,6 @@ export default class Canoe {
 
     canPush() {
         if (this.isBot) {
-            console.log(this.lastPush + this.nextPush < Date.now())
             return this.lastPush + this.nextPush < Date.now()
         }
         return false

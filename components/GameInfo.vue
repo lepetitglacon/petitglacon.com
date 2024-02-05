@@ -11,7 +11,6 @@ const props = defineProps([
 const model = defineModel()
 
 function handlePlay(e) {
-  // props.game
   model.value = false
   gameEngine.value.setGame(props.game)
 }
