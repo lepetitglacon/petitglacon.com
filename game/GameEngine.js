@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {CSS2DObject, CSS2DRenderer, OrbitControls} from "three/addons";
 import mapTexture from "assets/map.png";
 import heightmap from "assets/heightmap.png";
+import GameCanoe from "~/game/GameCanoe.js";
 
 export default class GameEngine {
 
@@ -12,6 +13,8 @@ export default class GameEngine {
                     gameInfoDescription,
                     gameInfoGame
                 }) {
+        this.currentGame = null
+
         let width = window.innerWidth
         let height = window.innerHeight
 
@@ -238,6 +241,15 @@ export default class GameEngine {
 
     setGame(game) {
         console.log("game set to : ", game)
+        switch (game) {
+            case 'Canoe': {
+                this.createCanoe()
+            }
+        }
+    }
+
+    createCanoe() {
+        this.currentGame = new GameCanoe({gameEngine: this})
     }
 
 }
