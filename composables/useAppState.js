@@ -4,9 +4,9 @@ const APP_STATES = {
     GAME: 'game',
 }
 
-let appState = APP_STATES.MAIN
+let appState = ref(APP_STATES.MAIN)
 const setAppState = (state) => {
-    appState = state
+    appState.value = state
 }
 
 export {appState, APP_STATES, setAppState}

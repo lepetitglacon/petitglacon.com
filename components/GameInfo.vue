@@ -1,15 +1,19 @@
 <script setup>
 import heightmap from '../assets/heightmap.png'
+import {gameEngine} from "~/composables/useGameEngine.js";
 
-defineProps([
+const props = defineProps([
     'title',
-    'description'
+    'description',
+    'game'
 ])
 
 const model = defineModel()
 
 function handlePlay(e) {
-
+  // props.game
+  model.value = false
+  gameEngine.value.setGame(props.game)
 }
 function handleClose(e) {
   model.value = false
@@ -26,7 +30,7 @@ function handleClose(e) {
       <img class="img" :src="heightmap">
       <img class="img" :src="heightmap">
     </div>
-    <button @click="handlePlay">Jouer</button>
+    <button v-if="game" @click="handlePlay">Jouer</button>
     <button @click="handleClose" class="close-button">Fermer</button>
   </div>
 </div>

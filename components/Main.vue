@@ -1,4 +1,5 @@
 <script setup>
+import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
 let articles = ref([
   {
     id: 1,
@@ -20,6 +21,9 @@ let articles = ref([
 const handleArticleClick = (e) => {
 
 }
+const handleGameClick = (e) => {
+  setAppState(APP_STATES.GAME)
+}
 </script>
 
 <template>
@@ -38,7 +42,9 @@ const handleArticleClick = (e) => {
     </div>
 
     <div>
-
+      <button @click="handleGameClick">
+        <span>Play</span>
+      </button>
     </div>
 
     <a href="https://github.com/lepetitglacon">Github</a>
