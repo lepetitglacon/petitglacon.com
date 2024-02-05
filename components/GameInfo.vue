@@ -8,6 +8,9 @@ defineProps([
 
 const model = defineModel()
 
+function handlePlay(e) {
+
+}
 function handleClose(e) {
   model.value = false
 }
@@ -23,7 +26,7 @@ function handleClose(e) {
       <img class="img" :src="heightmap">
       <img class="img" :src="heightmap">
     </div>
-    <button>Jouer</button>
+    <button @click="handlePlay">Jouer</button>
     <button @click="handleClose" class="close-button">Fermer</button>
   </div>
 </div>
