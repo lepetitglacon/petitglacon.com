@@ -257,9 +257,11 @@ export default class GameEngine extends EventTarget {
         switch (game) {
             case 'Canoe': {
                 this.createCanoe()
+                break;
             }
             case 'TowerDefense': {
                 this.createTowerDefense()
+                break;
             }
         }
     }
