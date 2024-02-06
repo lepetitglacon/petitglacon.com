@@ -4,6 +4,7 @@ import mapTexture from "assets/map.png";
 import heightmap from "assets/heightmap.png";
 import GameCanoe from "~/game/GameCanoe.js";
 import {Euler, Vector3} from "three";
+import GameTowerDefense from "~/game/GameTowerDefense.js";
 
 export default class GameEngine extends EventTarget {
 
@@ -257,11 +258,17 @@ export default class GameEngine extends EventTarget {
             case 'Canoe': {
                 this.createCanoe()
             }
+            case 'TowerDefense': {
+                this.createTowerDefense()
+            }
         }
     }
 
     createCanoe() {
         this.currentGame = new GameCanoe({engine: this})
+    }
+    createTowerDefense() {
+        this.currentGame = new GameTowerDefense({engine: this})
     }
 
     bind() {

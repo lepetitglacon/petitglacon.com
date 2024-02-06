@@ -1,5 +1,4 @@
 <script setup>
-
 import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
 
 </script>
