@@ -173,6 +173,9 @@ export default class GameEngine extends EventTarget {
 
             const p = document.createElement('p')
             p.textContent = name
+            p.classList.add('marker-label')
+            p.style.padding = '5px'
+            p.style.backgroundColor = '#00dc82'
             p.style.color = '#ffffff'
             const pPointLabel = new CSS2DObject(p)
             pPointLabel.position.copy(position)
