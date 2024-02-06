@@ -3,7 +3,8 @@ import heightmap from './assets/heightmap.png'
 import mapTexture from './assets/map.png'
 
 import * as THREE from 'three';
-import { OrbitControls } from "three/addons";
+import { OrbitControls, FirstPersonControls } from "three/addons";
+import GameBus from "~/game/GameBus.js";
 
 let isLoading = ref(true)
 
@@ -101,6 +102,15 @@ onMounted(() => {
     }
   })
 
+	const busGame = new GameBus({
+		engine: {
+			scene: scene,
+			renderer: renderer,
+			camera: camera,
+			controls: controls,
+		}
+	})
+
   function animate() {
     requestAnimationFrame( animate );
 
@@ -114,6 +124,8 @@ onMounted(() => {
 
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
+
+	  busGame.update()
 
     renderer.render( scene, camera );
   }
