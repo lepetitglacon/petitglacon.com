@@ -25,18 +25,18 @@ export default class GameEngine extends EventTarget {
 
         const minijeux = [
             {
-                position: new THREE.Vector3(-75, -12, -35),
+                position: new THREE.Vector3(40, -10, 5),
                 title: 'Station nautique',
                 description: 'Faites des courses de kanoe, et affrontez le champion Clément Jaquet',
                 game: 'Canoe'
             },
             {
-                position: new THREE.Vector3(-25, -12, -45),
+                position: new THREE.Vector3(0, -2, -175),
                 title: 'Boulevard de la mort',
                 description: '18h sur le boulevard, tentez de survivre...'
             },
             {
-                position: new THREE.Vector3(-150, -10, -150),
+                position: new THREE.Vector3(50, -10, -52),
                 title: 'Place faune et Flore',
                 description: 'Les corbeaux ont bien mangés, malheureusement votre voiture se trouve en dessous de leur nid',
                 game: 'TowerDefense'
@@ -44,7 +44,22 @@ export default class GameEngine extends EventTarget {
             {
                 position: new THREE.Vector3(-64, -10, -57),
                 title: 'Bussin fast',
-                description: 'Les étudiants attendent le bus, en retard de 15min... Vas-y chauffeuuuur !!'
+                description: 'Les étudiants attendent le bus, en retard de 15min... Chauffeuuuur si t\'es champion !!'
+            },
+            {
+                position: new THREE.Vector3(5, 0, 25),
+                title: 'Animalz',
+                description: 'Aidez nous à retrouver les animaux'
+            },
+            {
+                position: new THREE.Vector3(0, -10, -25),
+                title: 'Un jeudi soir normal',
+                description: 'It\'s thursday then, it\'s Wednesday, Thrusdray whaaat ?'
+            },
+            {
+                position: new THREE.Vector3(-90, 10, 70),
+                title: 'Leap of faith',
+                description: 'Celui la est plus difficile en vrai'
             }
         ]
 
@@ -161,7 +176,7 @@ export default class GameEngine extends EventTarget {
             p.style.color = '#ffffff'
             const pPointLabel = new CSS2DObject(p)
             pPointLabel.position.copy(position)
-            pPointLabel.position.y += 1
+            pPointLabel.position.y += 5
             this.scene.add(pPointLabel)
         }
         for (const jeu of minijeux) {
@@ -263,6 +278,7 @@ export default class GameEngine extends EventTarget {
     stop() {
         cancelAnimationFrame(this.requestAnimationFrameId)
         document.body.removeChild(this.renderer.domElement)
+        document.body.removeChild(this.labelRenderer.domElement)
 
         setAppState(APP_STATES.MAIN)
     }

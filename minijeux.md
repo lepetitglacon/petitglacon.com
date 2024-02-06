@@ -17,3 +17,12 @@ idée map :
 # Bus en heure de pointe
 Conduire un bus, prendre les passa gers le plus vite possible sinon tu seras en retard
 idée : faire les passager à l'intérieur du bus qui bougent quand t'accélère et freine MDR
+
+# Trouver et ranger les animaux de la citadelle
+
+
+# Saut en parachute 
+dans des cercles de couleur
+
+# It's thursday then, it's Wednesday, Thrusdray whaaat ?
+tour des bar dans le centre ville de besac

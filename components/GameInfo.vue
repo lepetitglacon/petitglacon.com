@@ -43,6 +43,7 @@ function handleClose(e) {
   align-items: center;
 
   pointer-events: none;
+  z-index: 50;
 
   width: 100vw;
   height: 100vh;
@@ -60,6 +61,11 @@ function handleClose(e) {
   position: absolute;
   right: 0;
   top: 0;
+
+  background-color: #9d0d0d;
+}
+.close-button:hover {
+  background-color: #c41414;
 }
 .img-container {
   display: flex;
