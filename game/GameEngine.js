@@ -5,6 +5,7 @@ import heightmap from "assets/heightmap.png";
 import GameCanoe from "~/game/GameCanoe.js";
 import {Euler, Vector3} from "three";
 import GameTowerDefense from "~/game/GameTowerDefense.js";
+import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
 
 export default class GameEngine extends EventTarget {
 
@@ -177,6 +178,7 @@ export default class GameEngine extends EventTarget {
         }
 
         window.addEventListener('keydown', (e) => {
+            console.log(e)
             switch (e.key) {
                 case 'z':
                     this.inputs.forward = true
@@ -189,6 +191,9 @@ export default class GameEngine extends EventTarget {
                     break;
                 case 'd':
                     this.inputs.right = true
+                    break;
+                case 'Escape':
+                    this.stop()
                     break;
             }
         })
@@ -218,7 +223,7 @@ export default class GameEngine extends EventTarget {
     }
 
     animate() {
-        requestAnimationFrame( () => this.animate() );
+        this.requestAnimationFrameId = requestAnimationFrame( () => this.animate() );
 
         this.controls.update()
         if (this.inputs.forward) this.camera.position.z -= this.velocity
@@ -250,6 +255,16 @@ export default class GameEngine extends EventTarget {
 
         this.labelRenderer.render(this.scene, this.camera)
         this.renderer.render( this.scene, this.camera );
+    }
+
+    start() {
+        this.animate()
+    }
+    stop() {
+        cancelAnimationFrame(this.requestAnimationFrameId)
+        document.body.removeChild(this.renderer.domElement)
+
+        setAppState(APP_STATES.MAIN)
     }
 
     setGame(game) {

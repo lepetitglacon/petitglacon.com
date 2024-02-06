@@ -1,4 +1,3 @@
-import Canoe from "~/game/Canoe.js";
 import {Group, Vector3} from "three";
 import Tower from "~/game/Tower.js";
 import Ennemy from "~/game/Ennemy.js";
@@ -25,14 +24,14 @@ export default class GameTowerDefense {
             const tower = new Tower({
                 position: new Vector3(-(i + 5), 1, -(i + 5))
             })
-            this.gameMeshGroup.add(tower)
+            tower.addToScene(this.gameMeshGroup)
             this.towers.push(tower)
         }
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < this.lives; i++) {
             const ennemy = new Ennemy({
                 position: this.spawnPoint.clone()
             })
-            this.gameMeshGroup.add(ennemy)
+            ennemy.addToScene(this.gameMeshGroup)
             this.ennemies.push(ennemy)
         }
         this.engine.scene.add(this.gameMeshGroup)
@@ -41,6 +40,11 @@ export default class GameTowerDefense {
     update() {
         for (const ennemy of this.ennemies) {
             ennemy.moveTo(this.arrivePoint, this.engine.clock.getDelta())
+
+            if (ennemy.mesh.position.distanceTo(this.arrivePoint) < 1) {
+                this.lives--
+
+            }
         }
 
         if (this.lives <= 0) {
