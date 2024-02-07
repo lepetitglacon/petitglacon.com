@@ -6,6 +6,7 @@ import GameCanoe from "~/game/GameCanoe.js";
 import {Euler, Vector3} from "three";
 import GameTowerDefense from "~/game/GameTowerDefense.js";
 import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
+import GameBus from "~/game/GameBus.js";
 
 export default class GameEngine extends EventTarget {
 
@@ -297,6 +298,10 @@ export default class GameEngine extends EventTarget {
                 this.createTowerDefense()
                 break;
             }
+            case 'Bus': {
+                this.createBus()
+                break;
+            }
         }
     }
 
@@ -305,6 +310,9 @@ export default class GameEngine extends EventTarget {
     }
     createTowerDefense() {
         this.currentGame = new GameTowerDefense({engine: this})
+    }
+    createBus() {
+        this.currentGame = new GameBus({engine: this})
     }
 
     bind() {
