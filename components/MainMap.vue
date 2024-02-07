@@ -3,19 +3,24 @@ import GameEngine from "~/game/GameEngine.js";
 import {gameEngine, setGameEngine} from "~/composables/useGameEngine.js";
 
 let isLoading = ref(true)
+let isLoadingAssets = ref(true)
 let isGameInfoShowing = ref(false)
 let gameInfoTitle = ref('')
 let gameInfoDescription = ref('')
 let gameInfoGame = ref('')
 
 onMounted(() => {
-  gameEngine.value = new GameEngine({
-    isLoading,
-    isGameInfoShowing,
-    gameInfoTitle,
-    gameInfoDescription,
-    gameInfoGame
-  })
+	setTimeout(() => {
+		gameEngine.value = new GameEngine({
+			isLoading,
+			isLoadingAssets,
+			isGameInfoShowing,
+			gameInfoTitle,
+			gameInfoDescription,
+			gameInfoGame
+		})
+	}, 250)
+
 })
 </script>
 
@@ -28,7 +33,7 @@ onMounted(() => {
   />
 
   <div v-if="isLoading" class="main-loader">
-    <p>LOADING</p>
+    <p>LOADING <span v-if="isLoadingAssets">ASSETS</span></p>
   </div>
 </template>
 
@@ -38,7 +43,7 @@ onMounted(() => {
     justify-content: center;
     align-items: center;
 
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
   }
 </style>

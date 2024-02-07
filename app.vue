@@ -5,9 +5,8 @@ import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
 
 <template>
 
-  <div>
-    <Main v-if="appState === APP_STATES.MAIN"/>
-    <MainMap v-if="appState === APP_STATES.GAME"/>
+  <div id="app">
+    <Main/>
   </div>
 
 </template>
@@ -17,6 +16,15 @@ import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
   margin: 0;
   padding: 0;
 }
+#app {
+    width: 100vw;
+    height: 100vh;
+
+	display: flex;
+
+	background-color: azure;
+}
+
 button {
   background-color: #04AA6D; /* Green */
   border: none;

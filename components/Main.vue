@@ -1,5 +1,6 @@
 <script setup>
 import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
+
 let articles = ref([
   {
     id: 1,
@@ -27,7 +28,7 @@ const handleGameClick = (e) => {
 </script>
 
 <template>
-  <div id="text">
+  <div id="aside">
     <h1>Petitglaçon | 小冰块 | 小さな氷</h1>
     <h2>Blog | 博客 | ブログ</h2>
 
@@ -49,8 +50,21 @@ const handleGameClick = (e) => {
 
     <a href="https://github.com/lepetitglacon">Github</a>
   </div>
+
+	<div id="content" ref="contentRef">
+		<MainMap v-if="appState === APP_STATES.GAME"/>
+	</div>
+
 </template>
 
-<style scoped>
-
+<style>
+#aside {
+	display: flex;
+	flex-direction: column;
+	background-color: sandybrown;
+}
+#content {
+	width: 100%;
+	height: 100%;
+}
 </style>

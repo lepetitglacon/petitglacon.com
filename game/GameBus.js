@@ -24,19 +24,22 @@ export default class GameBus {
         this.engine.controls.object.position.copy(this.bus.position.clone().add(this.cameraOffset))
 
         this.points++
+        console.log(this.points)
 
         if (this.points >= 5000) {
             this.engine.dispatchEvent(new Event('game:stop'))
         }
     }
 
+    stop() {
+        this.engine.removeEventListener('update', this.updateListener)
+        window.removeEventListener('keydown', this.keydownListener)
+        this.engine.scene.remove(this.bus)
+    }
+
     bind() {
         this.keydownListener = (e) => {
-            switch (e.key) {
-                case ' ':
-                    this.playerCanoe.push()
-                    break;
-            }
+
         }
         window.addEventListener('keydown', this.keydownListener)
         this.updateListener = () => this.update()

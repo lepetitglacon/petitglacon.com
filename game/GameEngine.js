@@ -12,6 +12,7 @@ export default class GameEngine extends EventTarget {
 
     constructor({
                     isLoading,
+                    isLoadingAssets,
                     isGameInfoShowing,
                     gameInfoTitle,
                     gameInfoDescription,
@@ -19,10 +20,9 @@ export default class GameEngine extends EventTarget {
                 }) {
         super();
 
-        this.currentGame = null
+        this.isLoadingAssets = isLoadingAssets
 
-        let width = window.innerWidth
-        let height = window.innerHeight
+        this.currentGame = null
 
         const minijeux = [
             {
@@ -45,7 +45,8 @@ export default class GameEngine extends EventTarget {
             {
                 position: new THREE.Vector3(-64, -10, -57),
                 title: 'Bussin fast',
-                description: 'Les étudiants attendent le bus, en retard de 15min... Chauffeuuuur si t\'es champion !!'
+                description: 'Les étudiants attendent le bus, en retard de 15min... Chauffeuuuur si t\'es champion !!',
+                game: 'Bus'
             },
             {
                 position: new THREE.Vector3(5, 0, 25),
@@ -66,13 +67,18 @@ export default class GameEngine extends EventTarget {
 
         // const gui = new GUI()
 
+        this.ROOT_ELEMENT = document.getElementById('content')
+
+        let width = this.ROOT_ELEMENT.clientWidth ?? 500
+        let height = this.ROOT_ELEMENT.clientHeight ?? 500
+
         this.textureLoader = new THREE.TextureLoader()
         this.labelRenderer = new CSS2DRenderer()
         this.labelRenderer.setSize(width, height)
         this.labelRenderer.domElement.style.position = 'absolute'
         this.labelRenderer.domElement.style.top = '0'
         this.labelRenderer.domElement.style.pointerEvents = 'none'
-        document.body.appendChild(this.labelRenderer.domElement)
+        this.ROOT_ELEMENT.appendChild(this.labelRenderer.domElement)
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
@@ -86,13 +92,13 @@ export default class GameEngine extends EventTarget {
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize( width, height );
-        document.body.appendChild( this.renderer.domElement );
+        this.ROOT_ELEMENT.appendChild( this.renderer.domElement );
 
         // resize
         window.addEventListener('resize', onWindowResize, false)
         function onWindowResize() {
-            width = window.innerWidth
-            height = window.innerHeight
+            width = this.ROOT_ELEMENT.clientWidth
+            height = this.ROOT_ELEMENT.clientHeight
             this.camera.aspect = width / height
             this.camera.updateProjectionMatrix()
             this.renderer.setSize(width, height)
@@ -115,8 +121,12 @@ export default class GameEngine extends EventTarget {
         this.mouse = new THREE.Vector2();
         this.intersections = [];
         const onPointerMove = ( event ) => {
-            this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-            this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            // https://stackoverflow.com/questions/67032197/three-js-raycasting-when-its-not-full-screen
+            const rect = this.renderer.domElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            this.mouse.x = ( x / this.ROOT_ELEMENT.clientWidth ) *  2 - 1;
+            this.mouse.y = ( y / this.ROOT_ELEMENT.clientHeight) * - 2 + 1
         }
         window.addEventListener( 'pointermove', onPointerMove );
         window.addEventListener( 'mousedown', (e) => {
@@ -134,6 +144,8 @@ export default class GameEngine extends EventTarget {
         const createGround = () => {
             let map = this.textureLoader.load(mapTexture)
             let disMap = this.textureLoader.load(heightmap)
+
+            isLoadingAssets = false
 
             const mapWidth = 1000
             const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth * 2, mapWidth * 2 );
@@ -281,8 +293,8 @@ export default class GameEngine extends EventTarget {
     }
     stop() {
         cancelAnimationFrame(this.requestAnimationFrameId)
-        document.body.removeChild(this.renderer.domElement)
-        document.body.removeChild(this.labelRenderer.domElement)
+        this.ROOT_ELEMENT.removeChild(this.renderer.domElement)
+        this.ROOT_ELEMENT.removeChild(this.labelRenderer.domElement)
 
         setAppState(APP_STATES.MAIN)
     }
@@ -321,6 +333,7 @@ export default class GameEngine extends EventTarget {
             this.currentGame.stop()
             this.camera.position.copy(this.cameraInitialPosition)
             this.camera.rotation.copy(this.cameraInitialRotation)
+            this.controls.target.copy(new Vector3())
         })
     }
 }

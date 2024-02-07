@@ -35,7 +35,6 @@ export default class GameCanoe {
             this.engine.controls.object.position.copy(this.playerCanoe.mesh.position)
             this.engine.controls.object.position.x += 5
             this.engine.controls.object.position.y += 5
-
         }
 
         for (const canoe of this.canoes) {
@@ -45,7 +44,6 @@ export default class GameCanoe {
                 this.engine.dispatchEvent(new Event('game:stop'))
             }
         }
-        
     }
 
     stop() {
