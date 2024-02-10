@@ -1,5 +1,6 @@
 <script setup>
 import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
+import MainContent from "~/components/MainContent.vue";
 
 let articles = ref([
   {
@@ -29,10 +30,13 @@ const handleGameClick = (e) => {
 
 <template>
   <div id="aside">
-    <h1>Petitglaçon | 小冰块 | 小さな氷</h1>
-    <h2>Blog | 博客 | ブログ</h2>
-
     <div>
+      <h1>Petitglaçon</h1>
+      <p>小さな氷</p>
+    </div>
+
+    <div class="aside-group">
+      <h2>Blog</h2>
       <ul>
         <li v-for="article in articles" :key="article.id">
           <button @click="handleArticleClick">
@@ -42,16 +46,26 @@ const handleGameClick = (e) => {
       </ul>
     </div>
 
-    <div>
+    <div class="aside-group">
+      <h2>Projects</h2>
+      <div class="github-container">
+        <a class="github-link" href="https://github.com/lepetitglacon">
+          <img class="github-logo" src="https://cdn-icons-png.flaticon.com/512/25/25231.png">
+        </a>
+      </div>
+    </div>
+
+    <div class="aside-group aside-play">
+      <h2>Mini games</h2>
       <button @click="handleGameClick">
         <span>Play</span>
       </button>
     </div>
 
-    <a href="https://github.com/lepetitglacon">Github</a>
   </div>
 
 	<div id="content" ref="contentRef">
+		<MainContent v-if="appState === APP_STATES.MAIN"/>
 		<MainMap v-if="appState === APP_STATES.GAME"/>
 	</div>
 
@@ -62,6 +76,25 @@ const handleGameClick = (e) => {
 	display: flex;
 	flex-direction: column;
 	background-color: sandybrown;
+}
+.aside-group {
+  padding: 30px 10px;
+}
+.aside-play {
+  display: flex;
+  flex-direction: column;
+}
+.github-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.github-logo {
+  width: 64px;
+  height: 64px;
+}
+.github-link {
+  text-decoration: none;
 }
 #content {
 	width: 100%;

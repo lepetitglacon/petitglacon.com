@@ -1,32 +1,43 @@
-import { FirstPersonControls } from "three/addons";
 import * as THREE from "three";
+import {Vector3} from "three";
+import * as CANNON from "cannon-es";
+import Bus from "~/game/Bus.js";
 
 export default class GameBus {
 
     constructor({engine}) {
         this.engine = engine
-        // this.controls = new FirstPersonControls(this.engine.camera, this.engine.renderer.domElement)
 
         this.points = 0
+        this.bus = new Bus({engine: this.engine})
 
-        const geometry = new THREE.BoxGeometry( 2, 2, 5 );
-        const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
-        this.bus = new THREE.Mesh( geometry, material );
-        this.engine.scene.add( this.bus );
+        const groundMaterial = new CANNON.Material('groundMaterial')
+        groundMaterial.friction = 0.25
+        groundMaterial.restitution = 0.25
 
-        this.cameraOffset = new THREE.Vector3(0, 5, 5)
+        //ground
+        const groundGeometry = new THREE.PlaneGeometry(100, 100)
+        const groundMesh = new THREE.Mesh(groundGeometry, this.engine.materials.phong)
+        groundMesh.rotateX(-Math.PI / 2)
+        groundMesh.receiveShadow = true
+        this.engine.scene.add(groundMesh)
+        const groundShape = new CANNON.Box(new CANNON.Vec3(50, 1, 50))
+        const groundBody = new CANNON.Body({ mass: 0, material: groundMaterial })
+        groundBody.addShape(groundShape)
+        groundBody.position.set(0, -1, 0)
+        this.engine.world.addBody(groundBody)
+
+
 
         this.bind()
     }
 
     update() {
-        this.engine.controls.target.copy(this.bus.position)
-        this.engine.controls.object.position.copy(this.bus.position.clone().add(this.cameraOffset))
+
+        this.bus.update()
 
         this.points++
-        console.log(this.points)
-
-        if (this.points >= 5000) {
+        if (this.points >= 50000) {
             this.engine.dispatchEvent(new Event('game:stop'))
         }
     }
@@ -39,7 +50,10 @@ export default class GameBus {
 
     bind() {
         this.keydownListener = (e) => {
-
+            switch (e.key) {
+                case 'z':
+                    break;
+            }
         }
         window.addEventListener('keydown', this.keydownListener)
         this.updateListener = () => this.update()

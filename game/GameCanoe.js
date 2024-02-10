@@ -6,16 +6,20 @@ export default class GameCanoe {
     constructor({engine}) {
         this.engine = engine
 
+        this.runDistance = 100
+        this.runDistanceMax = 1000
+
         this.playerCanoe = null
         this.startPosition = new Vector3()
         this.canoes = []
         this.gameMeshGroup = new Group()
 
-        this.createCanoe()
+        this.init()
+        this.reset()
         this.bind()
     }
 
-    createCanoe() {
+    init() {
         for (let i = 0; i < 4; i++) {
             const canoe = new Canoe(new Vector3(i + 5, 1, 1))
             if (i === 0) {
@@ -29,6 +33,13 @@ export default class GameCanoe {
         this.engine.scene.add(this.gameMeshGroup)
     }
 
+    reset() {
+        for (const canoe of this.canoes) {
+            canoe.reset()
+        }
+        this.runDistance += 250
+    }
+
     update() {
         if (this.playerCanoe.mesh.position) {
             this.engine.controls.target.copy(this.playerCanoe.mesh.position)
@@ -40,8 +51,11 @@ export default class GameCanoe {
         for (const canoe of this.canoes) {
             canoe.update()
 
-            if (canoe.mesh.position.distanceTo(this.startPosition) > 25) {
-                this.engine.dispatchEvent(new Event('game:stop'))
+            if (canoe.mesh.position.distanceTo(this.startPosition) > this.runDistance) {
+                this.reset()
+                if (this.runDistance >= this.runDistanceMax) {
+                    this.engine.dispatchEvent(new Event('game:stop'))
+                }
             }
         }
     }

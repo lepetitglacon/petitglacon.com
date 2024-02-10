@@ -3,10 +3,12 @@ import {CSS2DObject, CSS2DRenderer, OrbitControls} from "three/addons";
 import mapTexture from "assets/map.png";
 import heightmap from "assets/heightmap.png";
 import GameCanoe from "~/game/GameCanoe.js";
-import {Euler, Vector3} from "three";
+import {Euler, MeshPhongMaterial, Vector3} from "three";
 import GameTowerDefense from "~/game/GameTowerDefense.js";
 import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
 import GameBus from "~/game/GameBus.js";
+import * as CANNON from "cannon-es";
+import CannonDebugger from "cannon-es-debugger";
 
 export default class GameEngine extends EventTarget {
 
@@ -107,8 +109,17 @@ export default class GameEngine extends EventTarget {
 
         this.controls = new OrbitControls( this.camera, this.renderer.domElement );
 
+        // CANNON
+        this.world = new CANNON.World()
+        this.world.gravity.set(0, -9.8, 0)
+        this.cannonDebugger = new CannonDebugger(this.scene, this.world, {})
+
         const light = new THREE.AmbientLight( 0xcccccc ); // soft white light
         this.scene.add( light );
+
+        this.materials = {
+            phong: new MeshPhongMaterial()
+        }
 
         const geometry = new THREE.BoxGeometry( 0.5, 0.5, 0.5 );
         const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -141,31 +152,31 @@ export default class GameEngine extends EventTarget {
             }
         });
 
-        const createGround = () => {
-            let map = this.textureLoader.load(mapTexture)
-            let disMap = this.textureLoader.load(heightmap)
-
+        // const createGround = () => {
+        //     let map = this.textureLoader.load(mapTexture)
+        //     let disMap = this.textureLoader.load(heightmap)
+        //
             isLoadingAssets = false
-
-            const mapWidth = 1000
-            const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth * 2, mapWidth * 2 );
-            const material = new THREE.MeshStandardMaterial( {
-                // color: 0xffff00,
-                side: THREE.DoubleSide,
-                wireframe: false,
-                map: map,
-                displacementMap: disMap,
-                displacementScale: mapWidth / 10
-            });
-            const groundMesh = new THREE.Mesh( geometry, material );
-            groundMesh.rotateX(-Math.PI / 2)
-            groundMesh.rotateZ(5.5)
-            groundMesh.position.y = -mapWidth / 25
-            this.scene.add( groundMesh );
-
+        //
+        //     const mapWidth = 1000
+        //     const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth * 2, mapWidth * 2 );
+        //     const material = new THREE.MeshStandardMaterial( {
+        //         // color: 0xffff00,
+        //         side: THREE.DoubleSide,
+        //         wireframe: false,
+        //         map: map,
+        //         displacementMap: disMap,
+        //         displacementScale: mapWidth / 10
+        //     });
+        //     const groundMesh = new THREE.Mesh( geometry, material );
+        //     groundMesh.rotateX(-Math.PI / 2)
+        //     groundMesh.rotateZ(5.5)
+        //     groundMesh.position.y = -mapWidth / 25
+        //     this.scene.add( groundMesh );
+        //
             isLoading.value = false
-        }
-        createGround()
+        // }
+        // createGround()
 
         this.markerFloatTime = 25
         this.markerFloatSpeed = 5
@@ -257,10 +268,10 @@ export default class GameEngine extends EventTarget {
         this.requestAnimationFrameId = requestAnimationFrame( () => this.animate() );
 
         this.controls.update()
-        if (this.inputs.forward) this.camera.position.z -= this.velocity
-        if (this.inputs.back) this.camera.position.z += this.velocity
-        if (this.inputs.left) this.camera.position.x -= this.velocity
-        if (this.inputs.right) this.camera.position.x += this.velocity
+        // if (this.inputs.forward) this.camera.position.z -= this.velocity
+        // if (this.inputs.back) this.camera.position.z += this.velocity
+        // if (this.inputs.left) this.camera.position.x -= this.velocity
+        // if (this.inputs.right) this.camera.position.x += this.velocity
 
         if (this.mouse.x !== 0 && this.mouse.y !== 0) {
             this.raycaster.setFromCamera( this.mouse, this.camera );
@@ -284,6 +295,8 @@ export default class GameEngine extends EventTarget {
 
         this.dispatchEvent(new Event('update'))
 
+        this.world.step(1/60)
+        this.cannonDebugger.update()
         this.labelRenderer.render(this.scene, this.camera)
         this.renderer.render( this.scene, this.camera );
     }
