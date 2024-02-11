@@ -156,8 +156,6 @@ export default class GameEngine extends EventTarget {
         //     let map = this.textureLoader.load(mapTexture)
         //     let disMap = this.textureLoader.load(heightmap)
         //
-            isLoadingAssets = false
-        //
         //     const mapWidth = 1000
         //     const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth * 2, mapWidth * 2 );
         //     const material = new THREE.MeshStandardMaterial( {
@@ -174,7 +172,8 @@ export default class GameEngine extends EventTarget {
         //     groundMesh.position.y = -mapWidth / 25
         //     this.scene.add( groundMesh );
         //
-            isLoading.value = false
+              isLoading.value = false
+              isLoadingAssets = false
         // }
         // createGround()
 
@@ -295,7 +294,7 @@ export default class GameEngine extends EventTarget {
 
         this.dispatchEvent(new Event('update'))
 
-        this.world.step(1/60)
+        this.world.fixedStep()
         this.cannonDebugger.update()
         this.labelRenderer.render(this.scene, this.camera)
         this.renderer.render( this.scene, this.camera );
