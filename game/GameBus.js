@@ -68,6 +68,8 @@ export default class GameBus {
         // heiBody.position.y += 50
         // this.engine.world.addBody(heiBody)
 
+
+        // https://github.com/schteppe/cannon.js/blob/master/demos/heightfield.html
         for (let i = 0; i < 5; i++) {
             this.shape = new CANNON.Sphere(1)
             this.body = new CANNON.Body({ mass: 1 })
