@@ -9,13 +9,15 @@ export default class Bus {
         this.engine = engine
 
         this.engine.controls.enabled = true
-        this.v = new THREE.Vector3()
+        this.chaseCamVerticalAnchor = new THREE.Vector3()
         this.chaseCam = new THREE.Object3D()
         this.chaseCam.position.set(0, 0, 0)
         this.chaseCamPivot = new THREE.Object3D()
-        this.chaseCamPivot.position.set(0, 8, 12)
+        this.chaseCamPivot.position.set(0, 5, 12)
         this.chaseCam.add(this.chaseCamPivot)
         this.engine.scene.add(this.chaseCam)
+        this.chaseCamMinY = 10
+        this.chaseCamInterpolationSpeed = 0.05
 
         this.leftFrontAxis = new CANNON.Vec3(1, 0, 0)
         this.rightFrontAxis = new CANNON.Vec3(1, 0, 0)
@@ -105,9 +107,10 @@ export default class Bus {
         for (const wheelConfigElement of this.wheelConfig) {
             this.wheels.push(new Wheel({engine: this.engine, config:wheelConfigElement, bus: this}))
         }
-        this.turningSpeed = 0.01
-        this.acceleration = 0.05
-        this.accelerationMax = 100.0
+        this.turningSpeed = 0.005
+        this.turningRadius = 0.5
+        this.acceleration = 0.01
+        this.accelerationMax = 50.0
     }
 
 
@@ -124,12 +127,12 @@ export default class Bus {
             this.thrusting = true
         }
         if (this.engine.inputs.left) {
-            if (this.rightVelocity > -.8) this.rightVelocity -= this.turningSpeed
+            if (this.rightVelocity > -this.turningRadius) this.rightVelocity -= this.turningSpeed
         } else {
             if (this.rightVelocity < 0) this.rightVelocity += this.turningSpeed
         }
         if (this.engine.inputs.right) {
-            if (this.rightVelocity < .8) this.rightVelocity += this.turningSpeed
+            if (this.rightVelocity < this.turningRadius) this.rightVelocity += this.turningSpeed
         } else {
             if (this.rightVelocity > 0) this.rightVelocity -= this.turningSpeed
         }
@@ -154,11 +157,14 @@ export default class Bus {
 
         // update camera
         // this.engine.camera.lookAt(this.mesh.position)
-        // this.chaseCamPivot.getWorldPosition(this.v)
-        // if (this.v.y < 1) {
-        //     this.v.y = 1
+
+        // if (!this.engine.inputs.clicked) {
+        //     this.chaseCamPivot.getWorldPosition(this.chaseCamVerticalAnchor)
+        //     if (this.chaseCamVerticalAnchor.y < this.chaseCamMinY) {
+        //         this.chaseCamVerticalAnchor.y = this.chaseCamMinY
+        //     }
+        //     this.engine.camera.position.lerpVectors(this.engine.camera.position, this.chaseCamVerticalAnchor, this.chaseCamInterpolationSpeed)
         // }
-        // this.engine.camera.position.lerpVectors(this.engine.camera.position, this.v, 0.05)
     }
 
 }

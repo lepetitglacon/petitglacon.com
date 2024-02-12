@@ -152,30 +152,35 @@ export default class GameEngine extends EventTarget {
             }
         });
 
-        // const createGround = () => {
-        //     let map = this.textureLoader.load(mapTexture)
-        //     let disMap = this.textureLoader.load(heightmap)
-        //
-        //     const mapWidth = 1000
-        //     const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth * 2, mapWidth * 2 );
-        //     const material = new THREE.MeshStandardMaterial( {
-        //         // color: 0xffff00,
-        //         side: THREE.DoubleSide,
-        //         wireframe: false,
-        //         map: map,
-        //         displacementMap: disMap,
-        //         displacementScale: mapWidth / 10
-        //     });
-        //     const groundMesh = new THREE.Mesh( geometry, material );
-        //     groundMesh.rotateX(-Math.PI / 2)
-        //     groundMesh.rotateZ(5.5)
-        //     groundMesh.position.y = -mapWidth / 25
-        //     this.scene.add( groundMesh );
-        //
-              isLoading.value = false
-              isLoadingAssets = false
-        // }
-        // createGround()
+        this.worldsConfig = {}
+        this.worldsConfig.scale = 1000
+
+        const createGround = () => {
+            let map = this.textureLoader.load(mapTexture)
+            let disMap = this.textureLoader.load(heightmap)
+
+            const mapWidth = this.worldsConfig.scale
+            const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth, mapWidth);
+            const material = new THREE.MeshStandardMaterial( {
+                color: 0xffffff,
+                // side: THREE.DoubleSide,
+                wireframe: true,
+                // map: map,
+                displacementMap: disMap,
+                displacementScale: mapWidth/4
+            });
+            const groundMesh = new THREE.Mesh( geometry, material );
+            groundMesh.rotateX(-Math.PI / 2)
+            // groundMesh.rotateZ(5.5)
+            groundMesh.position.x = 0
+            groundMesh.position.y = 0
+            groundMesh.position.z = 0
+            this.scene.add( groundMesh );
+
+            isLoading.value = false
+            isLoadingAssets = false
+        }
+        createGround()
 
         this.markerFloatTime = 25
         this.markerFloatSpeed = 5
@@ -252,6 +257,21 @@ export default class GameEngine extends EventTarget {
                     break;
                 case 'd':
                     this.inputs.right = false
+                    break;
+            }
+        })
+
+        window.addEventListener('mousedown', (e) => {
+            switch (e.button) {
+                case 0:
+                    this.inputs.clicked = true
+                    break;
+            }
+        })
+        window.addEventListener('mouseup', (e) => {
+            switch (e.button) {
+                case 0:
+                    this.inputs.clicked = false
                     break;
             }
         })
