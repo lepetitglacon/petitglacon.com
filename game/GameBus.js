@@ -2,8 +2,9 @@ import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import Bus from "~/game/Bus.js";
 
-import heightmap from "assets/heightmap.png";
+import heightmapImage from "assets/heightmap.png";
 import {BufferGeometry, Mesh, MeshNormalMaterial} from "three";
+import Client from "~/game/Client.js";
 
 export default class GameBus {
 
@@ -11,6 +12,8 @@ export default class GameBus {
         this.engine = engine
 
         this.points = 0
+        this.clients = []
+        this.numberOfCLients = 100
         this.bus = new Bus({engine: this.engine})
 
         const groundMaterial = new CANNON.Material('groundMaterial')
@@ -18,81 +21,67 @@ export default class GameBus {
         groundMaterial.restitution = 1
 
         this.heightMap = new CANNON.Heightfield([[1]], {
-            elementSize: 0.5 // Distance between the data points in X and Y directions
+            elementSize: 1 // Distance between the data points in X and Y directions
         })
 
         const img = document.createElement('img')
-        img.src = heightmap
+        img.src = this.engine.heightmapImage
         img.onload = () => {
             const scale = this.engine.worldsConfig.scale
-            this.heightMap.setHeightsFromImage(img, new THREE.Vector3(scale*2,scale*2,scale/4))
+
+            this.heightMap.setHeightsFromImage(img, new THREE.Vector3(this.engine.worldsConfig.scale, this.engine.worldsConfig.scale, 50))
 
             this.heightfieldBody = new CANNON.Body({ mass: 0 })
-            this.heightfieldBody.addShape(this.heightMap)
             this.heightfieldBody.material = groundMaterial
-            this.heightfieldBody.position.x -= this.engine.worldsConfig.scale / 2
-            this.heightMapYOffset = -50
-            this.heightfieldBody.position.y = this.heightMapYOffset
-            this.heightfieldBody.position.z += this.engine.worldsConfig.scale / 2
-            this.heightfieldBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
+            this.heightfieldBody.addShape(this.heightMap)
             this.engine.world.addBody(this.heightfieldBody)
 
-            this.engine.gui.folders.worlds.cannon = {
-                gui: this.engine.gui.folders.worlds.gui.addFolder('cannon')
-            }
-            this.engine.gui.folders.worlds.cannon.gui.add(this.heightfieldBody.position, 'x').listen()
-            this.engine.gui.folders.worlds.cannon.gui.add(this.heightfieldBody.position, 'y').listen()
-            this.engine.gui.folders.worlds.cannon.gui.add(this.heightfieldBody.position, 'z').listen()
-            this.engine.gui.folders.worlds.cannon.gui.open()
+            this.engine.heightMapOffset = new THREE.Vector3(
+            -this.engine.worldsConfig.scale / 2,
+            0,
+            this.engine.worldsConfig.scale / 2,
+            )
+
+            this.heightfieldBody.position.copy(this.heightfieldBody.position.vadd(this.engine.heightMapOffset))
+            this.heightfieldBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
 
             this.engine.hideMarkers()
-
-            this.createPeople()
+            this.createClients()
         }
 
         this.bind()
     }
 
-    createPeople() {
-        // console.log(this.heightfieldBody.shapes[0].getHeightAt(-1, -1))
-
-        const transform = new CANNON.Transform({
-            position: this.heightfieldBody.position,
-            quaternion: this.heightfieldBody.quaternion
-        })
-
-        for (let i = 0; i < 1000; i++) {
-            const x = this.engine.getRandomInt(0, this.engine.worldsConfig.scale)
-            const z = this.engine.getRandomInt(0, this.engine.worldsConfig.scale)
+    createClients() {
+        for (let i = 0; i < this.numberOfCLients; i++) {
+            const x = this.engine.getRandomInt(0, this.engine.worldsConfig.scale-1)
+            const z = this.engine.getRandomInt(0, this.engine.worldsConfig.scale-1)
             const y = this.heightfieldBody.shapes[0].getHeightAt(x, z)
-            const localPosition = new CANNON.Vec3(x, y, z)
+            const localPosition = new CANNON.Vec3(x, y, -z)
+            localPosition.copy(localPosition.vadd(this.engine.heightMapOffset))
 
-            const worldPosition = new CANNON.Vec3()
-            worldPosition.copy(this.heightfieldBody.pointToWorldFrame(localPosition))
+            // const transform = new CANNON.Transform({
+            //     position: this.heightfieldBody.position,
+            //     quaternion: this.heightfieldBody.quaternion
+            // })
+            // const worldPosition = new CANNON.Vec3()
+            // worldPosition.copy(this.heightfieldBody.pointToWorldFrame(localPosition))
+            // worldPosition.copy(transform.pointToWorld(worldPosition))
 
-            // console.log('local', localPosition)
-            console.log('world', worldPosition)
-            worldPosition.copy(transform.pointToWorld(worldPosition))
-            console.log('world 2', worldPosition)
-            // console.log()
-
-            const geo = new THREE.BoxGeometry(1)
-            const cube = new THREE.Mesh(geo, this.engine.materials.phong )
-            cube.position.copy(worldPosition)
-            this.engine.scene.add(cube)
-
+            const client = new Client({engine: this.engine})
+            client.setPosition(localPosition)
+            this.clients.push(client)
         }
-
-
-
-        console.log(this.heightfieldBody.shapes[0]['_cachedPillars'])
-        console.log(Object.entries(this.heightfieldBody.shapes[0]['_cachedPillars']))
 
     }
 
     update() {
 
         this.bus.update()
+
+        for (const client of this.clients) {
+            client.update()
+        }
 
         this.points++
         if (this.points >= 50000) {
@@ -107,6 +96,12 @@ export default class GameBus {
     }
 
     bind() {
+        this.bus.body.addEventListener('collide', (e) => {
+            const map = this.clients.map((el) => el.body)
+            if (map.includes(e.body)) {
+                console.log('TOUCH2 UN CLIENT WWOOWOW')
+            }
+        })
         this.keydownListener = (e) => {
             switch (e.key) {
                 case 'z':

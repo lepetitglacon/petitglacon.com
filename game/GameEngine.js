@@ -3,7 +3,7 @@ import {CSS2DObject, CSS2DRenderer, OrbitControls} from "three/addons";
 import mapTexture from "assets/map.png";
 import heightmap from "assets/heightmap.png";
 import GameCanoe from "~/game/GameCanoe.js";
-import {Euler, Group, MeshPhongMaterial, Vector3} from "three";
+import {Euler, Group, MeshNormalMaterial, MeshPhongMaterial, Vector3} from "three";
 import GameTowerDefense from "~/game/GameTowerDefense.js";
 import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
 import GameBus from "~/game/GameBus.js";
@@ -92,7 +92,7 @@ export default class GameEngine extends EventTarget {
         this.ROOT_ELEMENT.appendChild(this.labelRenderer.domElement)
 
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+        this.camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 10000 );
         this.camera.position.y = 5
         this.camera.position.z = 5;
         this.cameraInitialPosition = new Vector3()
@@ -127,8 +127,12 @@ export default class GameEngine extends EventTarget {
         this.scene.add( light );
 
         this.materials = {
-            phong: new MeshPhongMaterial()
+            phong: new MeshPhongMaterial(),
+            normal: new MeshNormalMaterial()
         }
+
+        this.axesHelper = new THREE.AxesHelper( 1000 );
+        this.scene.add(this.axesHelper);
 
         const geometry = new THREE.BoxGeometry( 0.5, 0.5, 0.5 );
         const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -161,35 +165,37 @@ export default class GameEngine extends EventTarget {
             }
         });
 
-        this.worldsConfig = {}
-        this.worldsConfig.scale = 1000
+        this.worldsConfig = {
+            scale: 1000
+        }
 
-        // const createGround = () => {
-        //     let map = this.textureLoader.load(mapTexture)
-        //     let disMap = this.textureLoader.load(heightmap)
-        //
-        //     const mapWidth = this.worldsConfig.scale
-        //     const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth, mapWidth);
-        //     const material = new THREE.MeshStandardMaterial( {
-        //         color: 0xffffff,
-        //         // side: THREE.DoubleSide,
-        //         wireframe: true,
-        //         // map: map,
-        //         displacementMap: disMap,
-        //         displacementScale: mapWidth/4
-        //     });
-        //     const groundMesh = new THREE.Mesh( geometry, material );
-        //     groundMesh.rotateX(-Math.PI / 2)
-        //     // groundMesh.rotateZ(5.5)
-        //     groundMesh.position.x = 0
-        //     groundMesh.position.y = 0
-        //     groundMesh.position.z = 5
-        //     this.scene.add( groundMesh );
-        //
+        const createGround = () => {
+            let map = this.textureLoader.load(mapTexture)
+            this.heightmapImage = heightmap
+            this.disMap = this.textureLoader.load(this.heightmapImage)
+
+            const mapWidth = this.worldsConfig.scale
+            const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth-1, mapWidth-1);
+            const material = new THREE.MeshStandardMaterial( {
+                color: 0xffffff,
+                opacity: .5,
+                // side: THREE.DoubleSide,
+                wireframe: true,
+                // map: map,
+                displacementMap: this.disMap,
+                displacementScale: 200
+            });
+            this.groundMesh = new THREE.Mesh( geometry, material );
+            this.groundMesh.rotateX(-Math.PI / 2)
+            this.groundMesh.position.x = 0
+            this.groundMesh.position.y = 0
+            this.groundMesh.position.z = 5
+            this.scene.add( this.groundMesh );
+
             isLoading.value = false
             isLoadingAssets = false
-        // }
-        // createGround()
+        }
+        createGround()
 
         this.markerFloatTime = 25
         this.markerFloatSpeed = 5
@@ -374,6 +380,12 @@ export default class GameEngine extends EventTarget {
         const minCeiled = Math.ceil(min);
         const maxFloored = Math.floor(max);
         return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
+    }
+
+    rotateObjectAroundPoint(object, rotationPoint, rotation) {
+        object.position.sub(rotationPoint);
+        object.rotateX(rotation);
+        object.position.add(rotationPoint);
     }
 
     createCanoe() {

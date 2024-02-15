@@ -34,7 +34,7 @@ export default class Bus {
 
         this.geometry = new THREE.BoxGeometry(2.5, 3, 12)
         this.mesh = new THREE.Mesh(this.geometry, this.engine.materials.bus)
-        this.mesh.position.y = 20
+        this.mesh.position.y = 50
         this.mesh.castShadow = true
         this.engine.scene.add(this.mesh)
         this.mesh.add(this.chaseCam)
@@ -109,11 +109,26 @@ export default class Bus {
         }
         this.turningSpeed = 0.005
         this.turningRadius = 0.5
-        this.acceleration = 0.01
+        this.acceleration = 0.05
         this.accelerationMax = 50.0
+
+        this.bind()
     }
 
+    bind() {
+        window.addEventListener('keypress', (e) => {
+            if ((e.key) === 'y') {
+                this.body.position.y += 1.5
+                for (const wheel of this.wheels) {
+                    wheel.body.position.y += 1.5
+                }
+                this.body.quaternion.copy(new CANNON.Quaternion())
 
+                this.forwardVelocity = 0
+                this.rightVelocity = 0
+            }
+        })
+    }
 
     update() {
 
@@ -156,15 +171,14 @@ export default class Bus {
         }
 
         // update camera
-        // this.engine.camera.lookAt(this.mesh.position)
-
-        // if (!this.engine.inputs.clicked) {
-        //     this.chaseCamPivot.getWorldPosition(this.chaseCamVerticalAnchor)
-        //     if (this.chaseCamVerticalAnchor.y < this.chaseCamMinY) {
-        //         this.chaseCamVerticalAnchor.y = this.chaseCamMinY
-        //     }
-        //     this.engine.camera.position.lerpVectors(this.engine.camera.position, this.chaseCamVerticalAnchor, this.chaseCamInterpolationSpeed)
-        // }
+        this.engine.camera.lookAt(this.mesh.position)
+        if (!this.engine.inputs.clicked) {
+            this.chaseCamPivot.getWorldPosition(this.chaseCamVerticalAnchor)
+            if (this.chaseCamVerticalAnchor.y < this.chaseCamMinY) {
+                this.chaseCamVerticalAnchor.y = this.chaseCamMinY
+            }
+            this.engine.camera.position.lerpVectors(this.engine.camera.position, this.chaseCamVerticalAnchor, this.chaseCamInterpolationSpeed)
+        }
     }
 
 }
