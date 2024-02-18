@@ -22,6 +22,8 @@ export default class Client {
 
         this.engine.scene.add(this.mesh)
         this.engine.world.addBody(this.body)
+
+        this.isAttachedToBus = false
     }
 
     setPosition(position) {
@@ -31,6 +33,19 @@ export default class Client {
     }
 
     update() {
+        this.mesh.position.copy(this.body.position)
+        this.mesh.quaternion.copy(this.body.quaternion)
+    }
+
+    updateInBus(clientIndex) {
+
+        const absolutePosition = new THREE.Vector3(clientIndex % 2, 2, clientIndex / 2)
+        absolutePosition.applyQuaternion(this.body.quaternion)
+        absolutePosition.add(this.engine.currentGame.bus.body.position)
+
+        this.body.position.copy(absolutePosition)
+        this.body.quaternion.copy(this.engine.currentGame.bus.body.quaternion)
+
         this.mesh.position.copy(this.body.position)
         this.mesh.quaternion.copy(this.body.quaternion)
     }

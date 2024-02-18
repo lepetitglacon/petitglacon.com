@@ -13,6 +13,7 @@ export default class GameBus {
 
         this.points = 0
         this.clients = []
+        this.passengers = []
         this.numberOfCLients = 100
         this.bus = new Bus({engine: this.engine})
 
@@ -83,6 +84,16 @@ export default class GameBus {
             client.update()
         }
 
+        let i = 0
+        for (const client of this.passengers) {
+            client.updateInBus(i)
+
+            // const absolutePosition = new THREE.Vector3(i % 2, this.body.position.y + 2, i / 2)
+            // client.position = this.bus.body.pointToWorldFrame(absolutePosition)
+
+            i++
+        }
+
         this.points++
         if (this.points >= 50000) {
             this.engine.dispatchEvent(new Event('game:stop'))
@@ -100,6 +111,10 @@ export default class GameBus {
             const map = this.clients.map((el) => el.body)
             if (map.includes(e.body)) {
                 console.log('TOUCH2 UN CLIENT WWOOWOW')
+                const client = this.clients.filter((el) => el.body === e.body)[0]
+                client.isAttachedToBus = true
+                this.passengers.push(client)
+                this.clients = this.clients.filter((el) => el.body !== e.body)
             }
         })
         this.keydownListener = (e) => {

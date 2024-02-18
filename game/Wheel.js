@@ -26,7 +26,7 @@ export default class Wheel {
 
         this.shape = new CANNON.Sphere(config.radius)
 
-        this.body = new CANNON.Body({ mass: 1, material: this.wheelMaterial })
+        this.body = new CANNON.Body({ mass: 5, material: this.wheelMaterial })
         this.body.addShape(this.shape)
         this.body.position.copy(this.mesh.position)
         this.engine.world.addBody(this.body)
@@ -35,7 +35,7 @@ export default class Wheel {
         this.constraint = new CANNON.HingeConstraint(bus.body, this.body, {
             pivotA: config.axisPivot.clone(),
             axisA: config.axis.clone(),
-            maxForce: 0.99,
+            maxForce: 1000,
         })
         if (this.isDrivingWheel) {
             this.constraint.enableMotor()

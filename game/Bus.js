@@ -34,7 +34,7 @@ export default class Bus {
 
         this.geometry = new THREE.BoxGeometry(2.5, 3, 12)
         this.mesh = new THREE.Mesh(this.geometry, this.engine.materials.bus)
-        this.mesh.position.y = 50
+        this.mesh.position.y = 20
         this.mesh.castShadow = true
         this.engine.scene.add(this.mesh)
         this.mesh.add(this.chaseCam)
@@ -48,7 +48,7 @@ export default class Bus {
                 12/2
             )
         )
-        this.body = new CANNON.Body({ mass: 1 })
+        this.body = new CANNON.Body({ mass: 2 })
         this.body.addShape(this.shape)
         this.body.position.x = this.mesh.position.x
         this.body.position.y = this.mesh.position.y
@@ -109,8 +109,11 @@ export default class Bus {
         }
         this.turningSpeed = 0.005
         this.turningRadius = 0.5
-        this.acceleration = 0.05
+        this.acceleration = 0.1
         this.accelerationMax = 50.0
+
+        this.bodyRotation = new CANNON.Vec3()
+        this.axisZ = new CANNON.Vec3(0, 1, 0)
 
         this.bind()
     }
@@ -132,6 +135,7 @@ export default class Bus {
 
     update() {
 
+        // update velocity
         this.thrusting = false
         if (this.engine.inputs.forward) {
             if (this.forwardVelocity < this.accelerationMax) this.forwardVelocity += this.acceleration
@@ -139,7 +143,7 @@ export default class Bus {
         }
         if (this.engine.inputs.back) {
             if (this.forwardVelocity > -this.accelerationMax) this.forwardVelocity -= this.acceleration
-            this.thrusting = true
+            this.thrusting = false
         }
         if (this.engine.inputs.left) {
             if (this.rightVelocity > -this.turningRadius) this.rightVelocity -= this.turningSpeed
@@ -162,10 +166,20 @@ export default class Bus {
             }
         }
 
+        // update body
+        // const angleArray = this.body.quaternion.toAxisAngle(this.axisZ)
+        // console.log(angleArray[1].toFixed(2))
+        // if (angleArray[1] > Math.PI/4 || angleArray[1] < -Math.PI/4) {
+        //     console.log('overrotation Y')
+        //     this.body.quaternion.z = this.body.quaternion.z
+        // }
+
+        // update mesh
         this.mesh.position.copy(this.body.position)
         this.mesh.position.y -= this.shape.halfExtents.y
         this.mesh.quaternion.copy(this.body.quaternion)
 
+        // update wheels
         for (const wheel of this.wheels) {
             wheel.update(this.forwardVelocity, this.rightVelocity)
         }
