@@ -32,10 +32,11 @@ export default class Wheel {
         this.engine.world.addBody(this.body)
 
 
+
         this.constraint = new CANNON.HingeConstraint(bus.body, this.body, {
             pivotA: config.axisPivot.clone(),
             axisA: config.axis.clone(),
-            maxForce: 1000,
+            maxForce: 5,
         })
         if (this.isDrivingWheel) {
             this.constraint.enableMotor()

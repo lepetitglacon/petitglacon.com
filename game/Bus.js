@@ -110,10 +110,30 @@ export default class Bus {
         this.turningSpeed = 0.005
         this.turningRadius = 0.5
         this.acceleration = 0.1
-        this.accelerationMax = 50.0
+        this.accelerationMax = 20.0
+        this.thrusting = false
 
         this.bodyRotation = new CANNON.Vec3()
         this.axisZ = new CANNON.Vec3(0, 1, 0)
+
+        const busGui = this.engine.gui.addGui('bus')
+        const positionGui = this.engine.gui.addGui('position', 'bus')
+        positionGui.add(this.body.position, 'x').listen()
+        positionGui.add(this.body.position, 'y').listen()
+        positionGui.add(this.body.position, 'z').listen()
+        const rotationGui = this.engine.gui.addGui('rotation', 'bus')
+        rotationGui.add(this.body.quaternion, 'x').listen()
+        rotationGui.add(this.body.quaternion, 'y').listen()
+        rotationGui.add(this.body.quaternion, 'z').listen()
+        rotationGui.add(this.body.quaternion, 'w').listen()
+        const velocityGui = this.engine.gui.addGui('velocity', 'bus')
+        velocityGui.add(this.body.velocity, 'x').listen()
+        velocityGui.add(this.body.velocity, 'y').listen()
+        velocityGui.add(this.body.velocity, 'z').listen()
+        const motorGui = this.engine.gui.addGui('motor', 'bus')
+        motorGui.add(this, 'forwardVelocity').listen()
+        motorGui.add(this, 'rightVelocity').listen()
+        motorGui.add(this, 'thrusting').listen()
 
         this.bind()
     }
@@ -167,12 +187,15 @@ export default class Bus {
         }
 
         // update body
-        // const angleArray = this.body.quaternion.toAxisAngle(this.axisZ)
-        // console.log(angleArray[1].toFixed(2))
-        // if (angleArray[1] > Math.PI/4 || angleArray[1] < -Math.PI/4) {
-        //     console.log('overrotation Y')
-        //     this.body.quaternion.z = this.body.quaternion.z
-        // }
+        const angleArray = new THREE.Vector3()
+        this.body.quaternion.toEuler(angleArray)
+        console.log(angleArray.z)
+        if (angleArray.z > Math.PI/4 || angleArray.z < -Math.PI/4) {
+            console.log('overrotation Z')
+            if (this.forwardVelocity > 0) {
+                this.forwardVelocity -= 0.1
+            }
+        }
 
         // update mesh
         this.mesh.position.copy(this.body.position)

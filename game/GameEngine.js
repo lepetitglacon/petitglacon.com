@@ -10,6 +10,7 @@ import GameBus from "~/game/GameBus.js";
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
 import {GUI} from "dat.gui";
+import GuiAbstraction from "~/game/GuiAbstraction.js";
 
 export default class GameEngine extends EventTarget {
 
@@ -25,13 +26,7 @@ export default class GameEngine extends EventTarget {
 
         this.isLoadingAssets = isLoadingAssets
 
-        this.gui = {
-            gui: new GUI,
-            folders: {}
-        }
-        this.gui.folders.worlds = {
-            gui: this.gui.gui.addFolder('worlds')
-        }
+        this.gui = new GuiAbstraction({engine: this})
 
         this.currentGame = null
 
@@ -122,6 +117,11 @@ export default class GameEngine extends EventTarget {
         this.world = new CANNON.World()
         this.world.gravity.set(0, -9.8, 0)
         this.cannonDebugger = new CannonDebugger(this.scene, this.world, {})
+        const worldGui = this.gui.addGui('world')
+        const gravityGui = this.gui.addGui('gravity', 'world')
+        gravityGui.add(this.world.gravity, 'x')
+        gravityGui.add(this.world.gravity, 'y')
+        gravityGui.add(this.world.gravity, 'z')
 
         const light = new THREE.AmbientLight( 0xcccccc ); // soft white light
         this.scene.add( light );

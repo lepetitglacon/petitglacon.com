@@ -18,8 +18,8 @@ export default class GameBus {
         this.bus = new Bus({engine: this.engine})
 
         const groundMaterial = new CANNON.Material('groundMaterial')
-        groundMaterial.friction = 1
-        groundMaterial.restitution = 1
+        groundMaterial.friction = .5
+        groundMaterial.restitution = .5
 
         this.heightMap = new CANNON.Heightfield([[1]], {
             elementSize: 1 // Distance between the data points in X and Y directions
