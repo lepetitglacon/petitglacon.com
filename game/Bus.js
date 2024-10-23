@@ -1,21 +1,23 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
-import config from "bootstrap/js/src/util/config.js";
 import Wheel from "~/game/Wheel.js";
+import {MeshNormalMaterial} from "three";
 
 export default class Bus {
 
     constructor({engine}) {
         this.engine = engine
 
-        this.engine.controls.enabled = false
-        this.v = new THREE.Vector3()
+        this.engine.controls.enabled = true
+        this.chaseCamVerticalAnchor = new THREE.Vector3()
         this.chaseCam = new THREE.Object3D()
         this.chaseCam.position.set(0, 0, 0)
         this.chaseCamPivot = new THREE.Object3D()
-        this.chaseCamPivot.position.set(0, 3, 12)
+        this.chaseCamPivot.position.set(0, 5, 12)
         this.chaseCam.add(this.chaseCamPivot)
         this.engine.scene.add(this.chaseCam)
+        this.chaseCamMinY = 10
+        this.chaseCamInterpolationSpeed = 0.05
 
         this.leftFrontAxis = new CANNON.Vec3(1, 0, 0)
         this.rightFrontAxis = new CANNON.Vec3(1, 0, 0)
@@ -25,9 +27,14 @@ export default class Bus {
         this.forwardVelocity = 0
         this.rightVelocity = 0
 
-        this.geometry = new THREE.BoxGeometry(2.5, 2.5, 12)
-        this.mesh = new THREE.Mesh(this.geometry, this.engine.materials.phong)
-        this.mesh.position.y = 50
+        this.engine.materials.bus = new MeshNormalMaterial({
+            color: 0xFF7777,
+            wireframe: false
+        })
+
+        this.geometry = new THREE.BoxGeometry(2.5, 3, 12)
+        this.mesh = new THREE.Mesh(this.geometry, this.engine.materials.bus)
+        this.mesh.position.y = 20
         this.mesh.castShadow = true
         this.engine.scene.add(this.mesh)
         this.mesh.add(this.chaseCam)
@@ -36,54 +43,62 @@ export default class Bus {
 
         this.shape = new CANNON.Box(
             new CANNON.Vec3(
-            this.geometry.parameters.width/2,
-            this.geometry.parameters.height/2,
-            this.geometry.parameters.depth/2
+                2.5/2,
+                1.5/2,
+                12/2
             )
         )
-        console.log(this.shape)
-        this.body = new CANNON.Body({ mass: 1 })
+        this.body = new CANNON.Body({ mass: 2 })
         this.body.addShape(this.shape)
         this.body.position.x = this.mesh.position.x
         this.body.position.y = this.mesh.position.y
         this.body.position.z = this.mesh.position.z
         this.engine.world.addBody(this.body)
 
-        this.wheelHeight = 80
-        this.wheelRadius = 0.8
+        this.wheelHeight = this.mesh.position.y
+        this.wheelRadius = 0.5
         this.wheelGeometry = new THREE.Vector3(this.wheelRadius, this.wheelRadius, 0.4)
+        this.constraintHeight = -2
 
         this.wheels = []
         this.wheelConfig = [
             {
                 geometry: this.wheelGeometry,
-                position: new THREE.Vector3(-this.shape.halfExtents.x, this.wheelHeight, -this.shape.halfExtents.z),
+                position: new THREE.Vector3(
+                    -this.shape.halfExtents.x/2,
+                    this.wheelHeight,
+                    -this.shape.halfExtents.z/2
+                ),
                 axis: this.leftFrontAxis,
-                axisPivot: new CANNON.Vec3(-this.shape.halfExtents.x, -1.5, -this.shape.halfExtents.z),
+                axisPivot: new CANNON.Vec3(
+                    -this.shape.halfExtents.x/2,
+                    this.constraintHeight,
+                    -this.shape.halfExtents.z/2
+                ),
                 enableMotor: false,
                 radius: this.wheelRadius,
             },
             {
                 geometry: this.wheelGeometry,
-                position: new THREE.Vector3(this.shape.halfExtents.x, this.wheelHeight, -this.shape.halfExtents.z),
+                position: new THREE.Vector3(this.shape.halfExtents.x/2, this.wheelHeight, -this.shape.halfExtents.z/2),
                 axis: this.rightFrontAxis,
-                axisPivot: new CANNON.Vec3(this.shape.halfExtents.x, -1.5, -this.shape.halfExtents.z),
+                axisPivot: new CANNON.Vec3(this.shape.halfExtents.x/2, this.constraintHeight, -this.shape.halfExtents.z/2),
                 enableMotor: false,
                 radius: this.wheelRadius,
             },
             {
                 geometry: this.wheelGeometry,
-                position: new THREE.Vector3(-this.shape.halfExtents.x, this.wheelHeight, this.shape.halfExtents.z),
+                position: new THREE.Vector3(-this.shape.halfExtents.x/2, this.wheelHeight, this.shape.halfExtents.z/2),
                 axis: this.leftBackAxis,
-                axisPivot: new CANNON.Vec3(-this.shape.halfExtents.x, -1.5, this.shape.halfExtents.z),
+                axisPivot: new CANNON.Vec3(-this.shape.halfExtents.x/2, this.constraintHeight, this.shape.halfExtents.z/2),
                 enableMotor: true,
                 radius: this.wheelRadius,
             },
             {
                 geometry: this.wheelGeometry,
-                position: new THREE.Vector3(this.shape.halfExtents.x, this.wheelHeight, this.shape.halfExtents.z),
+                position: new THREE.Vector3(this.shape.halfExtents.x/2, this.wheelHeight, this.shape.halfExtents.z/2),
                 axis: this.rightBackAxis,
-                axisPivot: new CANNON.Vec3(this.shape.halfExtents.x, -1.5, this.shape.halfExtents.z),
+                axisPivot: new CANNON.Vec3(this.shape.halfExtents.x/2, this.constraintHeight, this.shape.halfExtents.z/2),
                 enableMotor: true,
                 radius: this.wheelRadius,
             },
@@ -92,37 +107,77 @@ export default class Bus {
         for (const wheelConfigElement of this.wheelConfig) {
             this.wheels.push(new Wheel({engine: this.engine, config:wheelConfigElement, bus: this}))
         }
+        this.turningSpeed = 0.005
+        this.turningRadius = 0.5
+        this.acceleration = 0.1
+        this.accelerationMax = 20.0
+        this.thrusting = false
 
+        this.bodyRotation = new CANNON.Vec3()
+        this.axisZ = new CANNON.Vec3(0, 1, 0)
+
+        const busGui = this.engine.gui.addGui('bus')
+        const positionGui = this.engine.gui.addGui('position', 'bus')
+        positionGui.add(this.body.position, 'x').listen()
+        positionGui.add(this.body.position, 'y').listen()
+        positionGui.add(this.body.position, 'z').listen()
+        const rotationGui = this.engine.gui.addGui('rotation', 'bus')
+        rotationGui.add(this.body.quaternion, 'x').listen()
+        rotationGui.add(this.body.quaternion, 'y').listen()
+        rotationGui.add(this.body.quaternion, 'z').listen()
+        rotationGui.add(this.body.quaternion, 'w').listen()
+        const velocityGui = this.engine.gui.addGui('velocity', 'bus')
+        velocityGui.add(this.body.velocity, 'x').listen()
+        velocityGui.add(this.body.velocity, 'y').listen()
+        velocityGui.add(this.body.velocity, 'z').listen()
+        const motorGui = this.engine.gui.addGui('motor', 'bus')
+        motorGui.add(this, 'forwardVelocity').listen()
+        motorGui.add(this, 'rightVelocity').listen()
+        motorGui.add(this, 'thrusting').listen()
+
+        this.bind()
+    }
+
+    bind() {
+        window.addEventListener('keypress', (e) => {
+            if ((e.key) === 'y') {
+                this.body.position.y += 1.5
+                for (const wheel of this.wheels) {
+                    wheel.body.position.y += 1.5
+                }
+                this.body.quaternion.copy(new CANNON.Quaternion())
+
+                this.forwardVelocity = 0
+                this.rightVelocity = 0
+            }
+        })
     }
 
     update() {
-        this.engine.camera.lookAt(this.mesh.position)
 
+        // update velocity
         this.thrusting = false
         if (this.engine.inputs.forward) {
-            if (this.forwardVelocity < 100.0) this.forwardVelocity += 0.05
+            if (this.forwardVelocity < this.accelerationMax) this.forwardVelocity += this.acceleration
             this.thrusting = true
         }
         if (this.engine.inputs.back) {
-            if (this.forwardVelocity > -100.0) this.forwardVelocity -= 0.05
-            this.thrusting = true
+            if (this.forwardVelocity > -this.accelerationMax) this.forwardVelocity -= this.acceleration
+            this.thrusting = false
         }
         if (this.engine.inputs.left) {
-            if (this.rightVelocity > -1.0) this.rightVelocity -= 0.05
+            if (this.rightVelocity > -this.turningRadius) this.rightVelocity -= this.turningSpeed
+        } else {
+            if (this.rightVelocity < 0) this.rightVelocity += this.turningSpeed
         }
         if (this.engine.inputs.right) {
-            if (this.rightVelocity < 1.0) this.rightVelocity += 0.05
+            if (this.rightVelocity < this.turningRadius) this.rightVelocity += this.turningSpeed
+        } else {
+            if (this.rightVelocity > 0) this.rightVelocity -= this.turningSpeed
         }
-        if (this.engine.inputs.jump) {
-            if (this.forwardVelocity > 0) {
-                this.forwardVelocity -= 1
-            }
-            if (this.forwardVelocity < 0) {
-                this.forwardVelocity += 1
-            }
-        }
+
+        //not going forward or backwards so gradually slow down
         if (!this.thrusting) {
-            //not going forward or backwards so gradually slow down
             if (this.forwardVelocity > 0) {
                 this.forwardVelocity -= 0.05
             }
@@ -131,20 +186,36 @@ export default class Bus {
             }
         }
 
+        // update body
+        const angleArray = new THREE.Vector3()
+        this.body.quaternion.toEuler(angleArray)
+        console.log(angleArray.z)
+        if (angleArray.z > Math.PI/4 || angleArray.z < -Math.PI/4) {
+            console.log('overrotation Z')
+            if (this.forwardVelocity > 0) {
+                this.forwardVelocity -= 0.1
+            }
+        }
+
+        // update mesh
         this.mesh.position.copy(this.body.position)
+        this.mesh.position.y -= this.shape.halfExtents.y
         this.mesh.quaternion.copy(this.body.quaternion)
 
+        // update wheels
         for (const wheel of this.wheels) {
             wheel.update(this.forwardVelocity, this.rightVelocity)
         }
 
         // update camera
         this.engine.camera.lookAt(this.mesh.position)
-        this.chaseCamPivot.getWorldPosition(this.v)
-        if (this.v.y < 1) {
-            this.v.y = 1
+        if (!this.engine.inputs.clicked) {
+            this.chaseCamPivot.getWorldPosition(this.chaseCamVerticalAnchor)
+            if (this.chaseCamVerticalAnchor.y < this.chaseCamMinY) {
+                this.chaseCamVerticalAnchor.y = this.chaseCamMinY
+            }
+            this.engine.camera.position.lerpVectors(this.engine.camera.position, this.chaseCamVerticalAnchor, this.chaseCamInterpolationSpeed)
         }
-        this.engine.camera.position.lerpVectors(this.engine.camera.position, this.v, 0.05)
     }
 
 }

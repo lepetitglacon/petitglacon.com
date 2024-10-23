@@ -3,12 +3,14 @@ import {CSS2DObject, CSS2DRenderer, OrbitControls} from "three/addons";
 import mapTexture from "assets/map.png";
 import heightmap from "assets/heightmap.png";
 import GameCanoe from "~/game/GameCanoe.js";
-import {Euler, MeshPhongMaterial, Vector3} from "three";
+import {Euler, Group, MeshNormalMaterial, MeshPhongMaterial, Vector3} from "three";
 import GameTowerDefense from "~/game/GameTowerDefense.js";
 import {appState, APP_STATES, setAppState} from "~/composables/useAppState.js";
 import GameBus from "~/game/GameBus.js";
 import * as CANNON from "cannon-es";
 import CannonDebugger from "cannon-es-debugger";
+import {GUI} from "dat.gui";
+import GuiAbstraction from "~/game/GuiAbstraction.js";
 
 export default class GameEngine extends EventTarget {
 
@@ -23,6 +25,8 @@ export default class GameEngine extends EventTarget {
         super();
 
         this.isLoadingAssets = isLoadingAssets
+
+        this.gui = new GuiAbstraction({engine: this})
 
         this.currentGame = null
 
@@ -83,7 +87,7 @@ export default class GameEngine extends EventTarget {
         this.ROOT_ELEMENT.appendChild(this.labelRenderer.domElement)
 
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+        this.camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 10000 );
         this.camera.position.y = 5
         this.camera.position.z = 5;
         this.cameraInitialPosition = new Vector3()
@@ -113,13 +117,22 @@ export default class GameEngine extends EventTarget {
         this.world = new CANNON.World()
         this.world.gravity.set(0, -9.8, 0)
         this.cannonDebugger = new CannonDebugger(this.scene, this.world, {})
+        const worldGui = this.gui.addGui('world')
+        const gravityGui = this.gui.addGui('gravity', 'world')
+        gravityGui.add(this.world.gravity, 'x')
+        gravityGui.add(this.world.gravity, 'y')
+        gravityGui.add(this.world.gravity, 'z')
 
         const light = new THREE.AmbientLight( 0xcccccc ); // soft white light
         this.scene.add( light );
 
         this.materials = {
-            phong: new MeshPhongMaterial()
+            phong: new MeshPhongMaterial(),
+            normal: new MeshNormalMaterial()
         }
+
+        this.axesHelper = new THREE.AxesHelper( 1000 );
+        this.scene.add(this.axesHelper);
 
         const geometry = new THREE.BoxGeometry( 0.5, 0.5, 0.5 );
         const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -152,35 +165,43 @@ export default class GameEngine extends EventTarget {
             }
         });
 
-        // const createGround = () => {
-        //     let map = this.textureLoader.load(mapTexture)
-        //     let disMap = this.textureLoader.load(heightmap)
-        //
-            isLoadingAssets = false
-        //
-        //     const mapWidth = 1000
-        //     const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth * 2, mapWidth * 2 );
-        //     const material = new THREE.MeshStandardMaterial( {
-        //         // color: 0xffff00,
-        //         side: THREE.DoubleSide,
-        //         wireframe: false,
-        //         map: map,
-        //         displacementMap: disMap,
-        //         displacementScale: mapWidth / 10
-        //     });
-        //     const groundMesh = new THREE.Mesh( geometry, material );
-        //     groundMesh.rotateX(-Math.PI / 2)
-        //     groundMesh.rotateZ(5.5)
-        //     groundMesh.position.y = -mapWidth / 25
-        //     this.scene.add( groundMesh );
-        //
+        this.worldsConfig = {
+            scale: 1000
+        }
+
+        const createGround = () => {
+            let map = this.textureLoader.load(mapTexture)
+            this.heightmapImage = heightmap
+            this.disMap = this.textureLoader.load(this.heightmapImage)
+
+            const mapWidth = this.worldsConfig.scale
+            const geometry = new THREE.PlaneGeometry( mapWidth, mapWidth, mapWidth-1, mapWidth-1);
+            const material = new THREE.MeshStandardMaterial( {
+                color: 0xffffff,
+                opacity: .5,
+                // side: THREE.DoubleSide,
+                wireframe: true,
+                // map: map,
+                displacementMap: this.disMap,
+                displacementScale: 200
+            });
+            this.groundMesh = new THREE.Mesh( geometry, material );
+            this.groundMesh.rotateX(-Math.PI / 2)
+            this.groundMesh.position.x = 0
+            this.groundMesh.position.y = 0
+            this.groundMesh.position.z = 5
+            this.scene.add( this.groundMesh );
+
             isLoading.value = false
-        // }
-        // createGround()
+            isLoadingAssets = false
+        }
+        createGround()
 
         this.markerFloatTime = 25
         this.markerFloatSpeed = 5
         this.markers = []
+        this.markersGroup = new Group()
+        this.markersLabelsGroup = new Group()
         const createMarker = (position, name, description, game) => {
             const geometry = new THREE.ConeGeometry( 1, 5, 32 );
             const material = new THREE.MeshStandardMaterial( {
@@ -192,7 +213,7 @@ export default class GameEngine extends EventTarget {
             cone.userData.label = name
             cone.userData.description = description
             cone.userData.game = game
-            this.scene.add( cone );
+            this.markersGroup.add(cone)
             this.markers.push(cone)
 
             const p = document.createElement('p')
@@ -204,11 +225,13 @@ export default class GameEngine extends EventTarget {
             const pPointLabel = new CSS2DObject(p)
             pPointLabel.position.copy(position)
             pPointLabel.position.y += 5
-            this.scene.add(pPointLabel)
+            this.markersLabelsGroup.add(pPointLabel)
         }
         for (const jeu of minijeux) {
             createMarker(jeu.position, jeu.title, jeu.description, jeu.game)
         }
+        this.scene.add( this.markersGroup );
+        this.scene.add( this.markersLabelsGroup );
 
         this.velocity = 0.05
         this.inputs = {
@@ -257,6 +280,21 @@ export default class GameEngine extends EventTarget {
             }
         })
 
+        window.addEventListener('mousedown', (e) => {
+            switch (e.button) {
+                case 0:
+                    this.inputs.clicked = true
+                    break;
+            }
+        })
+        window.addEventListener('mouseup', (e) => {
+            switch (e.button) {
+                case 0:
+                    this.inputs.clicked = false
+                    break;
+            }
+        })
+
         this.clock = new THREE.Clock()
         this.clock.start()
 
@@ -295,10 +333,18 @@ export default class GameEngine extends EventTarget {
 
         this.dispatchEvent(new Event('update'))
 
-        this.world.step(1/60)
+        this.world.fixedStep()
         this.cannonDebugger.update()
         this.labelRenderer.render(this.scene, this.camera)
         this.renderer.render( this.scene, this.camera );
+    }
+
+    hideMarkers() {
+        this.scene.remove(this.markersGroup)
+        for (const label of this.markersLabelsGroup.children) {
+            label.visible = false
+        }
+        // this.scene.remove(this.markersLabelsGroup)
     }
 
     start() {
@@ -328,6 +374,18 @@ export default class GameEngine extends EventTarget {
                 break;
             }
         }
+    }
+
+    getRandomInt(min, max) {
+        const minCeiled = Math.ceil(min);
+        const maxFloored = Math.floor(max);
+        return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
+    }
+
+    rotateObjectAroundPoint(object, rotationPoint, rotation) {
+        object.position.sub(rotationPoint);
+        object.rotateX(rotation);
+        object.position.add(rotationPoint);
     }
 
     createCanoe() {
