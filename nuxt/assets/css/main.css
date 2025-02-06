@@ -1,5 +1,19 @@
+@font-face {
+    font-family: 'Mont';
+    src: url("/fonts/Mont-HeavyDEMO.otf");
+}
+@font-face {
+    font-family: 'Mont Light';
+    src: url("/fonts/Mont-ExtraLightDEMO.otf");
+}
+
 body {
     min-height: 100vh;
+    font-family: 'Mont Light';
+}
+
+h2 {
+    font-family: Mont;
 }
 
 #__nuxt {

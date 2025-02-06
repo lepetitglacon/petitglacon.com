@@ -4,15 +4,15 @@
 
 <template>
 
-	<footer id="footer">
-		<p>Footer</p>
+	<footer id="footer" class="d-flex justify-content-center align-items-center">
+		<p>petitglacon</p>
 	</footer>
 
 </template>
 
 <style scoped>
 #footer {
-	background-color: skyblue;
-	min-height: 15vh;
+	background-color: #616161;
+	min-height: 10vh;
 }
 </style>

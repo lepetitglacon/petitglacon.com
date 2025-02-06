@@ -2,5 +2,17 @@
 export default defineNuxtConfig({
   ssr: false,
   compatibilityDate: '2024-04-03',
-  devtools: { enabled: true }
+  devtools: { enabled: true },
+
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ]
+    }
+  },
+
+  modules: [
+  ],
+
 })
